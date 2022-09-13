@@ -1,5 +1,6 @@
-#![allow(non_snake_case)]
+// #![allow(non_snake_case)]
 
+use crate::black_scholes::BlackScholesModel;
 use chrono::offset::Utc;
 use chrono::DateTime;
 use csv::Writer;
@@ -9,7 +10,7 @@ use std::fmt::Formatter;
 use std::path::PathBuf;
 use std::str::FromStr;
 
-mod black_scholes;
+pub mod black_scholes;
 pub mod parse_input;
 
 const SEC_YEAR: f64 = 60.0 * 60.0 * 24.0 * 365.25;
@@ -43,8 +44,6 @@ impl ToString for OptTypes {
 }
 
 // Struct for option greeks
-// Separated both for structure and to keep ability to initialize separately
-// if computing prices without greeks for a large number of options
 pub struct Greeks {
     pub delta: f64,
     pub gamma: f64,
@@ -88,6 +87,11 @@ impl fmt::Display for Greeks {
     }
 }
 
+pub trait PricingModel {
+    fn get_price(&self, opts: &Options) -> Vec<f64>;
+    fn get_greeks(&self, opts: &Options) -> Vec<Greeks>;
+}
+
 pub struct Options {
     pub tickers: Vec<String>,
     pub opt_types: Vec<OptTypes>,
@@ -101,6 +105,7 @@ pub struct Options {
     pub sigma: Vec<f64>,
     pub prices: Vec<f64>,
     pub greeks: Vec<Greeks>,
+    model: Box<dyn PricingModel + Send>,
     iter_count: usize,
 }
 
@@ -163,6 +168,7 @@ impl Options {
         dividend: Vec<f64>,
         rfr: Vec<f64>,
         sigma: Vec<f64>,
+        model: Box<dyn PricingModel + Send>,
     ) -> Self {
         let len = &tickers.len();
         let mut opts = Options {
@@ -178,6 +184,7 @@ impl Options {
             sigma,
             prices: Vec::with_capacity(*len),
             greeks: Vec::with_capacity(*len),
+            model,
             iter_count: 0,
         };
         opts.init_vals();
@@ -189,9 +196,8 @@ impl Options {
     fn init_vals(&mut self) {
         self.duration
             .append(&mut get_durs(&self.settles, &self.maturities));
-        // Initialize Black-Scholes model
-        let bsm_model = black_scholes::BlackScholesModel::new();
-        self.prices = bsm_model.bsm_price(self);
+
+        self.prices = self.model.get_price(self);
         for _ in 0..self.tickers.len() {
             self.greeks.push(Greeks {
                 ..Greeks::default()
@@ -208,6 +214,8 @@ fn get_durs(settles: &[DateTime<Utc>], maturities: &[DateTime<Utc>]) -> Vec<f64>
     durs
 }
 
+// This function initializes options from csv file, where the file does not return a model.
+// Therefore the function initializes with the default BlackScholesModel.
 pub fn initialize_opts(
     tup: (
         Vec<String>,
@@ -221,15 +229,23 @@ pub fn initialize_opts(
         Vec<f64>,
     ),
 ) -> Options {
-    let bsm_model = black_scholes::BlackScholesModel;
-
     // Initialize Options
     let mut opts = Options::new(
-        tup.0, tup.1, tup.2, tup.3, tup.4, tup.5, tup.6, tup.7, tup.8,
+        tup.0,
+        tup.1,
+        tup.2,
+        tup.3,
+        tup.4,
+        tup.5,
+        tup.6,
+        tup.7,
+        tup.8,
+        Box::new(BlackScholesModel::new()),
     );
 
+    let bsm_model = black_scholes::BlackScholesModel;
     // Initialize greeks
-    opts.greeks = bsm_model.bsm_greeks(&opts);
+    opts.greeks = bsm_model.get_greeks(&opts);
 
     // Return Options with greeks
     opts
@@ -263,6 +279,7 @@ pub fn write_csv_out(path: PathBuf, opts: Vec<Options>) -> Result<(), Box<dyn Er
     wtr.write_record(headers).expect("failed writing headers");
 
     // Collects chunked options back into one file, see function comment
+    // Check Iterator implementation for what records contain.
     for opt in opts {
         for rec in opt {
             wtr.write_record(rec)

@@ -1,7 +1,9 @@
-use super::{Greeks, OptTypes, Options};
+use super::{Greeks, OptTypes, Options, PricingModel};
 use statrs::distribution::{Continuous, ContinuousCDF, Normal};
 
 pub struct BlackScholesModel;
+
+unsafe impl Send for BlackScholesModel {}
 
 impl BlackScholesModel {
     // Constructor method
@@ -27,9 +29,17 @@ impl BlackScholesModel {
     fn get_d2(&self, d1: &f64, sigma: &f64, duration: &f64) -> f64 {
         d1 - sigma * duration.sqrt()
     }
+}
 
+impl Default for BlackScholesModel {
+    fn default() -> Self {
+        BlackScholesModel::new()
+    }
+}
+
+impl PricingModel for BlackScholesModel {
     // Black-Scholes option price
-    pub fn bsm_price(&self, opt: &Options) -> Vec<f64> {
+    fn get_price(&self, opt: &Options) -> Vec<f64> {
         // Initialize vectors
         let mut d1: Vec<f64> = Vec::with_capacity(opt.tickers.len());
         let mut d2: Vec<f64> = Vec::with_capacity(opt.tickers.len());
@@ -65,7 +75,7 @@ impl BlackScholesModel {
 
     // todo!(Alexander): Comment this section
     // For a cleaner representation of the maths see repo notebook.
-    pub fn bsm_greeks(&self, opts: &Options) -> Vec<Greeks> {
+    fn get_greeks(&self, opts: &Options) -> Vec<Greeks> {
         fn get_delta(
             n: &Normal,
             opt_type: &OptTypes,
