@@ -7,14 +7,22 @@ use std::path::PathBuf;
 
 /// # chunk_opts
 /// Chunk a single large [`Options`] into chunks for parallel computation.
+///
+/// # args:
+/// * `opt` - Input option to chunk
+/// * `size` - Size of chunks (1000 is a good starting point)
+///
+/// # returns:
+/// A Vec of [`Options`]. Maximum size of each `Options` set by size argument.
 pub fn chunk_opt(opt: Options, size: usize) -> Vec<Options> {
     let n_options = opt.opt_data.tickers.len(); // Number of options
     let chunks = (n_options as f64 / size as f64) as usize; // Number of chunks
     let mut chunk_vec = Vec::with_capacity(chunks);
     let mut idx;
     for i in 0..=chunks {
-        idx = i * size;
+        idx = i * size; // Starting index of next chunk
         if i < chunks {
+            // If there are full chunks left to allocate
             chunk_vec.push(Options::new(
                 OptData::new(
                     opt.opt_data.tickers[idx..idx + size - 1].to_vec(),
@@ -30,6 +38,7 @@ pub fn chunk_opt(opt: Options, size: usize) -> Vec<Options> {
                 Box::new(BlackScholesModel::new()),
             ))
         } else {
+            // If not enough for full chunk allocate the rest
             chunk_vec.push(Options::new(
                 OptData::new(
                     opt.opt_data.tickers[idx..n_options].to_vec(),
