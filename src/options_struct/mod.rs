@@ -108,7 +108,7 @@ impl Options {
     /// # returns:
     /// A flattened representation of the data in a Vec<[String;16]>
     pub fn to_records(&self) -> Vec<[String; 16]> {
-        if (self.prices.len() == 0) | (self.greeks.len() == 0) {
+        if self.prices.is_empty() | self.greeks.is_empty() {
             panic!("Prices or Greeks of wrong length, or uninitialized.")
         }
         let mut records = Vec::with_capacity(self.opt_data.tickers.len());

@@ -53,6 +53,12 @@ impl BlackScholesModel {
     }
 }
 
+impl Default for BlackScholesModel {
+    fn default() -> Self {
+        BlackScholesModel
+    }
+}
+
 impl PricingModel for BlackScholesModel {
     /// # self.get_price
     /// Computes prices

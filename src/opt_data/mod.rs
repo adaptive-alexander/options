@@ -133,6 +133,8 @@ impl Default for OptData {
 fn parse_date(s: &str) -> String {
     let mut s_ret;
 
+    // The following patterns handle most of Pythons native date types
+    // Regex used to search
     match &s.find('+') {
         Some(_) => return s.to_string(),
         None => {}
