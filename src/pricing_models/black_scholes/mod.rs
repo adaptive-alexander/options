@@ -7,7 +7,7 @@ use statrs::distribution::{Continuous, ContinuousCDF, Normal};
 /// # BlackScholesModel
 /// Model to compute prices and greeks. Uses extended
 /// Black-Scholes formula assuming continuous dividends.
-/// For a better view of the mathematics review the notebook [link].
+/// For a better view of the mathematics review the notebook <https://github.com/adaptive-alexander/portfolio/blob/main/options/docs/notes.ipynb>.
 pub struct BlackScholesModel;
 
 /// # Implement Send for BlackScholesModel
@@ -36,20 +36,21 @@ impl BlackScholesModel {
         strike: &f64,
         dividend: &f64,
         rfr: &f64,
-        sigma: &f64,
+        volatility: &f64,
         duration: &f64,
     ) -> f64 {
-        (1.0 / (sigma * duration.sqrt()))
-            * ((underlying / strike).ln() + duration * (rfr - dividend + (sigma.powf(2.0) / 2.0)))
+        (1.0 / (volatility * duration.sqrt()))
+            * ((underlying / strike).ln()
+                + duration * (rfr - dividend + (volatility.powf(2.0) / 2.0)))
     }
 
-    /// #self.get_d1
+    /// # self.get_d1
     /// Computes parameter d2
     ///
     /// # returns:
     /// An f64 value for d2
-    fn get_d2(&self, d1: &f64, sigma: &f64, duration: &f64) -> f64 {
-        d1 - sigma * duration.sqrt()
+    fn get_d2(&self, d1: &f64, volatility: &f64, duration: &f64) -> f64 {
+        d1 - volatility * duration.sqrt()
     }
 }
 
@@ -64,7 +65,7 @@ impl PricingModel for BlackScholesModel {
     /// Computes prices
     ///
     /// # args:
-    /// *`opts` - Takes a reference to options_old to use for calculations. This is passed self
+    /// * `opts` - Takes a reference to options_old to use for calculations. This is passed self
     /// from [`Options`] get_price function.
     ///
     /// # returns:
@@ -87,10 +88,14 @@ impl PricingModel for BlackScholesModel {
                 &opt.opt_data.strike[i],
                 &opt.opt_data.dividend[i],
                 &opt.opt_data.rfr[i],
-                &opt.opt_data.sigma[i],
+                &opt.opt_data.volatility[i],
                 &opt.opt_data.duration[i],
             ));
-            d2.push(self.get_d2(&d1[i], &opt.opt_data.sigma[i], &opt.opt_data.duration[i]));
+            d2.push(self.get_d2(
+                &d1[i],
+                &opt.opt_data.volatility[i],
+                &opt.opt_data.duration[i],
+            ));
 
             // Push price into return Vec
             prices.push(
@@ -124,7 +129,7 @@ impl PricingModel for BlackScholesModel {
     /// Computes option greeks
     ///
     /// # args:
-    /// *`opts` - Takes a reference to options_old to use for calculations. This is passed self
+    /// * `opts` - Takes a reference to options_old to use for calculations. This is passed self
     /// from [`Options`] get_price function.
     ///
     /// # returns:
@@ -162,12 +167,12 @@ impl PricingModel for BlackScholesModel {
         /// Internal function used by get_greeks to compute option gamma
         ///
         /// # args:
-        /// *`n` - A [`Normal`] struct from statrs. Used to calculate normal distributions.
-        /// *`d1` - d1 from [`get_d1`]
-        /// *`dividend` - Option dividend, assumed to be continuous.
-        /// *`duration` - Duration of options_old contract in years.
-        /// *`underlying` - Underlying price.
-        /// *`sigma` - Annualized volatility.
+        /// * `n` - A [`Normal`] struct from statrs. Used to calculate normal distributions.
+        /// * `d1` - d1 from [`get_d1`]
+        /// * `dividend` - Option dividend, assumed to be continuous.
+        /// * `duration` - Duration of options_old contract in years.
+        /// * `underlying` - Underlying price.
+        /// * `volatility` - Annualized volatility.
         ///
         /// # returns:
         /// Option gamma (sensitivity of delta changes f'(delta))
@@ -177,20 +182,21 @@ impl PricingModel for BlackScholesModel {
             dividend: &f64,
             duration: &f64,
             underlying: &f64,
-            sigma: &f64,
+            volatility: &f64,
         ) -> f64 {
-            (((-(dividend * duration)).exp()) / (underlying * sigma * duration.sqrt())) * n.pdf(*d1)
+            (((-(dividend * duration)).exp()) / (underlying * volatility * duration.sqrt()))
+                * n.pdf(*d1)
         }
 
         /// # get_vega
         /// Internal function used by get_greeks to compute option vega
         ///
         /// # args:
-        /// *`n` - A [`Normal`] struct from statrs. Used to calculate normal distributions.
-        /// *`d1` - d1 from [`get_d1`].
-        /// *`dividend` - Option dividend, assumed to be continuous.
-        /// *`duration` - Duration of options_old contract in years.
-        /// *`underlying` - Underlying price.
+        /// * `n` - A [`Normal`] struct from statrs. Used to calculate normal distributions.
+        /// * `d1` - d1 from [`get_d1`].
+        /// * `dividend` - Option dividend, assumed to be continuous.
+        /// * `duration` - Duration of options_old contract in years.
+        /// * `underlying` - Underlying price.
         ///
         /// # returns:
         /// Option vega (sensitivity to volatility)
@@ -206,16 +212,16 @@ impl PricingModel for BlackScholesModel {
         /// Internal function used by get_greeks to compute option theta
         ///
         /// # args:
-        /// *`n` - A [`Normal`] struct from statrs. Used to calculate normal distributions.
-        /// *`d1` - d1 from [`get_d1`].
-        /// *`d2` - d2 from [`get_d2`].
-        /// *`opt_type` - Options type.
-        /// *`dividend` - Option dividend, assumed to be continuous.
-        /// *`duration` - Duration of options_old contract in years.
-        /// *`strike` - Strike of options_old.
-        /// *`rfr` - Risk free rate.
-        /// *`underlying` - Underlying price.
-        /// *`sigma` - Annualized volatility.
+        /// * `n` - A [`Normal`] struct from statrs. Used to calculate normal distributions.
+        /// * `d1` - d1 from [`get_d1`].
+        /// * `d2` - d2 from [`get_d2`].
+        /// * `opt_type` - Options type.
+        /// * `dividend` - Option dividend, assumed to be continuous.
+        /// * `duration` - Duration of options_old contract in years.
+        /// * `strike` - Strike of options_old.
+        /// * `rfr` - Risk free rate.
+        /// * `underlying` - Underlying price.
+        /// * `volatility` - Annualized volatility.
         ///
         /// # returns:
         /// Option theta (sensitivity to change in duration)
@@ -229,19 +235,19 @@ impl PricingModel for BlackScholesModel {
             duration: &f64,
             strike: &f64,
             rfr: &f64,
-            sigma: &f64,
+            volatility: &f64,
         ) -> f64 {
             let mut ret = 0.0;
             if *opt_type == OptTypes::Call {
                 ret = (1.0 / 365.25)
-                    * (-(((underlying * sigma * (-(dividend * duration)).exp()) / 2.0
+                    * (-(((underlying * volatility * (-(dividend * duration)).exp()) / 2.0
                         * duration.sqrt())
                         * n.pdf(*d1))
                         - rfr * strike * (-(rfr * duration)).exp() * n.cdf(*d2)
                         + dividend * underlying * (-(dividend * duration)).exp() * n.cdf(*d1))
             } else if *opt_type == OptTypes::Put {
                 ret = (1.0 / 365.25)
-                    * (-(((underlying * sigma * (-(dividend * duration)).exp()) / 2.0
+                    * (-(((underlying * volatility * (-(dividend * duration)).exp()) / 2.0
                         * duration.sqrt())
                         * n.pdf(*d1))
                         + rfr * strike * (-(rfr * duration)).exp() * n.cdf(-*d2)
@@ -254,12 +260,12 @@ impl PricingModel for BlackScholesModel {
         /// Internal function used by get_greeks to compute option rho
         ///
         /// # args:
-        /// *`n` - A [`Normal`] struct from statrs. Used to calculate normal distributions.
-        /// *`d2` - d2 from [`get_d2`].
-        /// *`opt_type` - Options type.
-        /// *`duration` - Duration of options_old contract in years.
-        /// *`strike` - Strike of options_old.
-        /// *`rfr` - Risk free rate.
+        /// * `n` - A [`Normal`] struct from statrs. Used to calculate normal distributions.
+        /// * `d2` - d2 from [`get_d2`].
+        /// * `opt_type` - Options type.
+        /// * `duration` - Duration of options_old contract in years.
+        /// * `strike` - Strike of options_old.
+        /// * `rfr` - Risk free rate.
         ///
         /// # returns:
         /// Option rho (sensitivity to interest rate changes)
@@ -299,10 +305,14 @@ impl PricingModel for BlackScholesModel {
                 &opts.opt_data.strike[i],
                 &opts.opt_data.dividend[i],
                 &opts.opt_data.rfr[i],
-                &opts.opt_data.sigma[i],
+                &opts.opt_data.volatility[i],
                 &opts.opt_data.duration[i],
             ));
-            d2.push(self.get_d2(&d1[i], &opts.opt_data.sigma[i], &opts.opt_data.duration[i]));
+            d2.push(self.get_d2(
+                &d1[i],
+                &opts.opt_data.volatility[i],
+                &opts.opt_data.duration[i],
+            ));
         }
 
         // Push greeks into return Vec
@@ -323,7 +333,7 @@ impl PricingModel for BlackScholesModel {
                     &opts.opt_data.dividend[i],
                     &opts.opt_data.duration[i],
                     &opts.opt_data.underlying[i],
-                    &opts.opt_data.sigma[i],
+                    &opts.opt_data.volatility[i],
                 ),
                 // get_vega
                 vega: get_vega(
@@ -344,7 +354,7 @@ impl PricingModel for BlackScholesModel {
                     &opts.opt_data.duration[i],
                     &opts.opt_data.strike[i],
                     &opts.opt_data.rfr[i],
-                    &opts.opt_data.sigma[i],
+                    &opts.opt_data.volatility[i],
                 ),
                 // get_rho
                 rho: get_rho(

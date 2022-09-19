@@ -33,7 +33,7 @@ pub fn chunk_opt(opt: Options, size: usize) -> Vec<Options> {
                     opt.opt_data.maturities[idx..idx + size - 1].to_vec(),
                     opt.opt_data.dividend[idx..idx + size - 1].to_vec(),
                     opt.opt_data.rfr[idx..idx + size - 1].to_vec(),
-                    opt.opt_data.sigma[idx..idx + size - 1].to_vec(),
+                    opt.opt_data.volatility[idx..idx + size - 1].to_vec(),
                 ),
                 Box::new(BlackScholesModel::new()),
             ))
@@ -49,7 +49,7 @@ pub fn chunk_opt(opt: Options, size: usize) -> Vec<Options> {
                     opt.opt_data.maturities[idx..n_options].to_vec(),
                     opt.opt_data.dividend[idx..n_options].to_vec(),
                     opt.opt_data.rfr[idx..n_options].to_vec(),
-                    opt.opt_data.sigma[idx..n_options].to_vec(),
+                    opt.opt_data.volatility[idx..n_options].to_vec(),
                 ),
                 Box::new(BlackScholesModel::new()),
             ))
@@ -77,7 +77,7 @@ pub fn collect_chunks(opts: Vec<Options>) -> Options {
         ret_opt.opt_data.duration.extend(opt.opt_data.duration);
         ret_opt.opt_data.dividend.extend(opt.opt_data.dividend);
         ret_opt.opt_data.rfr.extend(opt.opt_data.rfr);
-        ret_opt.opt_data.sigma.extend(opt.opt_data.sigma);
+        ret_opt.opt_data.volatility.extend(opt.opt_data.volatility);
         ret_opt.prices.extend(opt.prices);
         ret_opt.greeks.extend(opt.greeks);
     }

@@ -8,11 +8,15 @@ use crate::pricing_models::black_scholes::BlackScholesModel;
 use csv::Writer;
 use std::str::FromStr;
 
+/// # OptTypes
+/// Enum representing option types.
 #[derive(PartialEq, Eq, Clone, Copy)]
 pub enum OptTypes {
-    /// # OptTypes
-    /// Enum to hold the two Option types call and put.
+    /// # OptTypes::Call
+    /// Enum type representing calls.
     Call,
+    /// # OptTypes::Put
+    /// Enum type representing puts.
     Put,
 }
 
@@ -45,7 +49,7 @@ impl ToString for OptTypes {
 
 pub struct Options {
     /// # Options
-    /// A struct representing a financial options_old contract.
+    /// A struct representing a financial options contract.
     pub opt_data: OptData,
     pub prices: Vec<f64>,
     pub greeks: Vec<Greeks>,
@@ -57,8 +61,8 @@ impl Options {
     /// # Options::new
     /// Literal construction method for Options
     /// # args:
-    /// *`opt_data` - an [`OptData`] struct holding the necessary inputs to price an option.
-    /// *`model` - Pricing model used to compute options_old. Has to implement PricingModel and Send.
+    /// * `opt_data` - an [`OptData`] struct holding the necessary inputs to price an option.
+    /// * `model` - Pricing model used to compute options_old. Has to implement PricingModel and Send.
     /// # returns:
     /// Returns an `Options` struct.
     pub fn new(opt_data: OptData, model: Box<dyn PricingModel + Send>) -> Self {
@@ -75,8 +79,8 @@ impl Options {
     /// Constructs options_old from file.
     ///
     /// # args:
-    /// *`input_file` - Path to input file.
-    /// *`model` - Pricing model used to compute options_old. Has to implement PricingModel and Send.
+    /// * `input_file` - Path to input file.
+    /// * `model` - Pricing model used to compute options_old. Has to implement PricingModel and Send.
 
     /// # returns:
     /// Returns an `Options` struct.
@@ -106,7 +110,7 @@ impl Options {
     /// Flattens option data (deserialize to vector of flat records)
     ///
     /// # returns:
-    /// A flattened representation of the data in a Vec<[String;16]>
+    /// A flattened representation of the data in a Vec<\[String;16\]>
     pub fn to_records(&self) -> Vec<[String; 16]> {
         if self.prices.is_empty() | self.greeks.is_empty() {
             panic!("Prices or Greeks of wrong length, or uninitialized.")
@@ -123,7 +127,7 @@ impl Options {
                 self.opt_data.duration[i].to_string(),
                 self.opt_data.dividend[i].to_string(),
                 self.opt_data.rfr[i].to_string(),
-                self.opt_data.sigma[i].to_string(),
+                self.opt_data.volatility[i].to_string(),
                 self.prices[i].to_string(),
                 self.greeks[i].delta.to_string(),
                 self.greeks[i].gamma.to_string(),
@@ -150,7 +154,7 @@ impl Options {
             "duration",
             "dividend",
             "rfr",
-            "sigma",
+            "volatility",
             "price",
             "delta",
             "gamma",

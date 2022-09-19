@@ -21,7 +21,7 @@ pub struct OptData {
     pub duration: Vec<f64>,
     pub dividend: Vec<f64>,
     pub rfr: Vec<f64>,
-    pub sigma: Vec<f64>,
+    pub volatility: Vec<f64>,
 }
 
 impl OptData {
@@ -39,7 +39,7 @@ impl OptData {
     /// dividends follow the same pattern the pricing model expects. For
     /// example Black-Scholes assumes continuous dividends for the period.
     /// * `rfr` - Vector fo risk free interest rate.
-    /// * `sigma` - Vector of annualized volatility.
+    /// * `volatility` - Vector of annualized volatility.
     ///
     /// # returns:
     /// Returns `OptData` struct.
@@ -52,7 +52,7 @@ impl OptData {
         maturities: Vec<DateTime<Utc>>,
         dividend: Vec<f64>,
         rfr: Vec<f64>,
-        sigma: Vec<f64>,
+        volatility: Vec<f64>,
     ) -> Self {
         let mut opt_data = OptData {
             tickers,
@@ -64,7 +64,7 @@ impl OptData {
             duration: Vec::new(),
             dividend,
             rfr,
-            sigma,
+            volatility,
         };
         opt_data.duration = opt_data.get_durs();
         opt_data
@@ -116,7 +116,7 @@ impl Default for OptData {
             duration: vec![],
             dividend: vec![],
             rfr: vec![],
-            sigma: vec![],
+            volatility: vec![],
         }
     }
 }
@@ -254,10 +254,10 @@ pub fn parse_input(
             .iter()
             .position(|x| x.to_lowercase() == "rfr")
             .expect("No header rfr in file");
-        let sigma_idx = headers
+        let volatility_idx = headers
             .iter()
-            .position(|x| x.to_lowercase() == "sigma")
-            .expect("No header sigma in file");
+            .position(|x| x.to_lowercase() == "volatility")
+            .expect("No header volatility in file");
 
         // initializing Vectors
         let mut tickers: Vec<String> = Vec::with_capacity(lines_num);
@@ -268,7 +268,7 @@ pub fn parse_input(
         let mut maturities: Vec<DateTime<Utc>> = Vec::with_capacity(lines_num);
         let mut dividend: Vec<f64> = Vec::with_capacity(lines_num);
         let mut rfr: Vec<f64> = Vec::with_capacity(lines_num);
-        let mut sigma: Vec<f64> = Vec::with_capacity(lines_num);
+        let mut volatility: Vec<f64> = Vec::with_capacity(lines_num);
 
         // push data
         for line in lines.flatten() {
@@ -301,15 +301,15 @@ pub fn parse_input(
                     .parse::<f64>()
                     .expect("failed to parse s to f64"),
             );
-            sigma.push(
-                inps[sigma_idx]
+            volatility.push(
+                inps[volatility_idx]
                     .parse::<f64>()
                     .expect("failed to parse s to f64"),
             );
         }
         // Return tuple of columns
         (
-            tickers, opt_types, underlying, strike, settles, maturities, dividend, rfr, sigma,
+            tickers, opt_types, underlying, strike, settles, maturities, dividend, rfr, volatility,
         )
     } else {
         panic!("Unable to parse input.")

@@ -11,7 +11,7 @@ pub struct Greeks {
 
 // Default implementation for option greeks (need to be initialized in struct)
 impl Default for Greeks {
-    /// Returns default Black-Scholes Greeks initialized as 0
+    /// Returns default Black-Scholes Greeks initialized as 0.
     /// Only intended to be used by init function as placeholder
     fn default() -> Self {
         Greeks {
