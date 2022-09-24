@@ -17,46 +17,48 @@ use std::path::PathBuf;
 pub fn chunk_opt(opt: Options, size: usize) -> Vec<Options> {
     let n_options = opt.opt_data.tickers.len(); // Number of options
     let chunks = (n_options as f64 / size as f64) as usize; // Number of chunks
+    let remaining = n_options % size;
     let mut chunk_vec = Vec::with_capacity(chunks);
     let mut idx;
-    for i in 0..=chunks {
+    for i in 0..=(chunks - 1) {
         idx = i * size; // Starting index of next chunk
-        if i < chunks {
-            // If there are full chunks left to allocate
-            chunk_vec.push(Options::new(
-                OptData::new(
-                    opt.opt_data.tickers[idx..idx + size - 1].to_vec(),
-                    opt.opt_data.opt_types[idx..idx + size - 1].to_vec(),
-                    opt.opt_data.underlying[idx..idx + size - 1].to_vec(),
-                    opt.opt_data.strike[idx..idx + size - 1].to_vec(),
-                    opt.opt_data.settles[idx..idx + size - 1].to_vec(),
-                    opt.opt_data.maturities[idx..idx + size - 1].to_vec(),
-                    opt.opt_data.dividend[idx..idx + size - 1].to_vec(),
-                    opt.opt_data.rfr[idx..idx + size - 1].to_vec(),
-                    opt.opt_data.volatility[idx..idx + size - 1].to_vec(),
-                ),
-                Box::new(BlackScholesModel::new()),
-            ))
-        } else {
-            // If not enough for full chunk allocate the rest
-            chunk_vec.push(Options::new(
-                OptData::new(
-                    opt.opt_data.tickers[idx..n_options].to_vec(),
-                    opt.opt_data.opt_types[idx..n_options].to_vec(),
-                    opt.opt_data.underlying[idx..n_options].to_vec(),
-                    opt.opt_data.strike[idx..n_options].to_vec(),
-                    opt.opt_data.settles[idx..n_options].to_vec(),
-                    opt.opt_data.maturities[idx..n_options].to_vec(),
-                    opt.opt_data.dividend[idx..n_options].to_vec(),
-                    opt.opt_data.rfr[idx..n_options].to_vec(),
-                    opt.opt_data.volatility[idx..n_options].to_vec(),
-                ),
-                Box::new(BlackScholesModel::new()),
-            ))
-        }
+        // If there are full chunks left to allocate
+        chunk_vec.push(Options::new(
+            OptData::new(
+                opt.opt_data.tickers[idx..idx + size - 1].to_vec(),
+                opt.opt_data.opt_types[idx..idx + size - 1].to_vec(),
+                opt.opt_data.underlying[idx..idx + size - 1].to_vec(),
+                opt.opt_data.strike[idx..idx + size - 1].to_vec(),
+                opt.opt_data.settles[idx..idx + size - 1].to_vec(),
+                opt.opt_data.maturities[idx..idx + size - 1].to_vec(),
+                opt.opt_data.dividend[idx..idx + size - 1].to_vec(),
+                opt.opt_data.rfr[idx..idx + size - 1].to_vec(),
+                opt.opt_data.volatility[idx..idx + size - 1].to_vec(),
+            ),
+            Box::new(BlackScholesModel::new()),
+        ))
+    };
+    if remaining != 0 {
+        // If not enough for full chunk allocate the rest
+        chunk_vec.push(Options::new(
+            OptData::new(
+                opt.opt_data.tickers[idx..n_options].to_vec(),
+                opt.opt_data.opt_types[idx..n_options].to_vec(),
+                opt.opt_data.underlying[idx..n_options].to_vec(),
+                opt.opt_data.strike[idx..n_options].to_vec(),
+                opt.opt_data.settles[idx..n_options].to_vec(),
+                opt.opt_data.maturities[idx..n_options].to_vec(),
+                opt.opt_data.dividend[idx..n_options].to_vec(),
+                opt.opt_data.rfr[idx..n_options].to_vec(),
+                opt.opt_data.volatility[idx..n_options].to_vec(),
+            ),
+            Box::new(BlackScholesModel::new()),
+        ))
     }
+
     chunk_vec
 }
+
 /// # collect_chunks
 /// Takes a Vec of options and returns a single [`Options`]
 ///
