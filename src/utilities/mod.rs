@@ -36,7 +36,8 @@ pub fn chunk_opt(opt: Options, size: usize) -> Vec<Options> {
                 opt.opt_data.volatility[idx..idx + size].to_vec(),
             ),
             Box::new(BlackScholesModel::new()),
-        ))
+        ));
+        println!("From {} to {}", idx, idx + size);
     };
     if remaining != 0 {
         // If not enough for full chunk allocate the rest
