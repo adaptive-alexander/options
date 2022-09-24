@@ -25,15 +25,15 @@ pub fn chunk_opt(opt: Options, size: usize) -> Vec<Options> {
         // If there are full chunks left to allocate
         chunk_vec.push(Options::new(
             OptData::new(
-                opt.opt_data.tickers[idx..idx + size - 1].to_vec(),
-                opt.opt_data.opt_types[idx..idx + size - 1].to_vec(),
-                opt.opt_data.underlying[idx..idx + size - 1].to_vec(),
-                opt.opt_data.strike[idx..idx + size - 1].to_vec(),
-                opt.opt_data.settles[idx..idx + size - 1].to_vec(),
-                opt.opt_data.maturities[idx..idx + size - 1].to_vec(),
-                opt.opt_data.dividend[idx..idx + size - 1].to_vec(),
-                opt.opt_data.rfr[idx..idx + size - 1].to_vec(),
-                opt.opt_data.volatility[idx..idx + size - 1].to_vec(),
+                opt.opt_data.tickers[idx..idx + size].to_vec(),
+                opt.opt_data.opt_types[idx..idx + size].to_vec(),
+                opt.opt_data.underlying[idx..idx + size].to_vec(),
+                opt.opt_data.strike[idx..idx + size].to_vec(),
+                opt.opt_data.settles[idx..idx + size].to_vec(),
+                opt.opt_data.maturities[idx..idx + size].to_vec(),
+                opt.opt_data.dividend[idx..idx + size].to_vec(),
+                opt.opt_data.rfr[idx..idx + size].to_vec(),
+                opt.opt_data.volatility[idx..idx + size].to_vec(),
             ),
             Box::new(BlackScholesModel::new()),
         ))
