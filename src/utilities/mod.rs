@@ -19,7 +19,7 @@ pub fn chunk_opt(opt: Options, size: usize) -> Vec<Options> {
     let chunks = (n_options as f64 / size as f64) as usize; // Number of chunks
     let remaining = n_options % size;
     let mut chunk_vec = Vec::with_capacity(chunks);
-    let mut idx;
+    let mut idx= 0;
     for i in 0..=(chunks - 1) {
         idx = i * size; // Starting index of next chunk
         // If there are full chunks left to allocate
