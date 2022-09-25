@@ -91,13 +91,14 @@ pub fn collect_chunks(opts: Vec<Options>) -> Options {
 ///
 /// # args:
 /// *`path` - Path to file to open.
-pub fn retry_open_file(path: &PathBuf) -> BufReader<File> {
-    let file: BufReader<File>;
+pub fn retry_open_file(path: &PathBuf) -> Option<BufReader<File>> {
+    let start = std::time::Instant::now();
     loop {
         if let Ok(f) = File::open(&path) {
-            file = BufReader::new(f);
-            break;
+            return Some(BufReader::new(f))
+        }
+        if start.elapsed() > std::time::Duration::from_secs(5) {
+            return None
         }
     }
-    file
 }

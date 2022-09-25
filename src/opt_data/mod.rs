@@ -205,7 +205,7 @@ pub fn parse_input(
 
     // Compute number of lines
     loop {
-        file = retry_open_file(path);
+        file = retry_open_file(path).unwrap();
         // parse number of lines in file
         lines_num = 0;
         for _ in file.lines().skip(1) {
